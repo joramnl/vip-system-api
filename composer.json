@@ -1,8 +1,9 @@
 {
-    "require": {
-        "monolog/monolog": "^2.0",
-        "catfan/medoo": "^1.7",
-        "vlucas/phpdotenv": "^4.1",
-        "slim/slim": "3.*"
-    }
+  "require": {
+    "monolog/monolog": "^2.0",
+    "catfan/medoo": "^1.7",
+    "vlucas/phpdotenv": "^4.1",
+    "slim/slim": "3.*",
+    "ext-json": "*"
+  }
 }
