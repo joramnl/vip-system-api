@@ -44,12 +44,33 @@ class App {
             return function (Request $request, Response $response, Exception $exception) use ($container) {
                 $container->logger->error("Error", [$exception]);
 
+                $errormsg = $exception->getMessage();
+                $errormsg = str_replace('"', "", $errormsg);
+                $errormsg = str_replace("'", "", $errormsg);
+
+
+                $container->logger->error($errormsg);
+
                 $error = [
                     "success" => false,
-                    "error" => $exception->getMessage()
+                    "error" => $errormsg
                 ];
 
                 return $response->withStatus(500)
+                    ->withHeader('Content-Type', 'application/json')
+                    ->write(json_encode($error));
+            };
+        };
+
+        $container['notFoundHandler'] = function ($c) {
+            return function ($request, $response) use ($c) {
+
+                $error = [
+                    "success" => false,
+                    "error" => "API Route does not exist."
+                ];
+
+                return $response->withStatus(404)
                     ->withHeader('Content-Type', 'application/json')
                     ->write(json_encode($error));
             };
