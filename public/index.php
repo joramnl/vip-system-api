@@ -5,12 +5,15 @@ error_reporting(0);
 use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 use VIPSystem\App;
+use VIPSystem\Middleware\CorsMiddleware;
 
 require '../vendor/autoload.php';
 
 $system = new App;
 
 $app = $system->getSlimApp();
+
+$app->add(new CorsMiddleware);
 
 $app->get('/users', function (Request $request, Response $response, array $args) {
 
