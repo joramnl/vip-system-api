@@ -9,6 +9,10 @@ use \Psr\Http\Message\ServerRequestInterface as Request;
 use \Psr\Http\Message\ResponseInterface as Response;
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
+use Tuupola\Middleware\JwtAuthentication;
+use VIPSystem\Controllers\PackageController;
+use VIPSystem\Controllers\UserController;
+use VIPSystem\Middleware\CRSMiddleware;
 use wpscholar\phpdotenv\Loader;
 
 class App {
@@ -57,8 +61,7 @@ class App {
                 ];
 
                 return $response->withStatus(500)
-                    ->withHeader('Content-Type', 'application/json')
-                    ->write(json_encode($error));
+                    ->withJson($error);
             };
         };
 
@@ -71,13 +74,11 @@ class App {
                 ];
 
                 return $response->withStatus(404)
-                    ->withHeader('Content-Type', 'application/json')
-                    ->write(json_encode($error));
+                    ->withJson($error);
             };
         };
 
         $container['db'] = function ($c) {
-            $c->logger->info("DB_NAME: " . getenv("DB_HOST"));
             return new Medoo([
                 'database_type' => 'mysql',
                 'database_name' => getenv("DB_NAME"),
@@ -86,6 +87,38 @@ class App {
                 'password' => getenv("DB_PASSWORD")
             ]);
         };
+
+        $container['UserController'] = function($container) {
+            $database = $container->get("db"); // retrieve the 'view' from the container
+            return new UserController($database);
+        };
+
+        $this->app->add(new CRSMiddleware);
+
+        $this->app->add(new JwtAuthentication([
+            "secret" => getenv("JWT_SECRET"),
+            "ignore" => ["/users/authenticate"],
+            "error" => function ($response, $arguments) {
+                $data = [
+                    "success" => false,
+                    "error" => $arguments["message"]
+                ];
+                return $response
+                    ->withStatus(401)
+                    ->withJson($data);
+            }
+        ]));
+
+        $this->app->group('/users', function (\Slim\App $app) {
+            $app->get('', UserController::class . ':list');
+            $app->get('/{id:[0-9]+}', UserController::class . ':get');
+            $app->get('/authenticate', UserController::class . ':authenticate');
+            $app->get('/verify', UserController::class . ':verify');
+        });
+
+        $this->app->get('/packages', PackageController::class . ':list');
+
+        $this->app->get('/packages/{id:[0-9]+}', PackageController::class . ':get');
     }
 
 
