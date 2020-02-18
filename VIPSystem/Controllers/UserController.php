@@ -23,11 +23,15 @@ class UserController
     }
 
     public function list(Request $request, Response $response, $args) {
-        $data = $this->container->get('db')->select('user', '*');
+        $jwt = $request->getAttribute("token");
+
+        $id = (int) $jwt["user"]->user_id;
+
+        $user = $this->getUserByID($id);
 
         $json = [
             "success" => true,
-            "results" => $data
+            "results" => $user->toArray()
         ];
 
         return $response->withJson($json);
@@ -105,8 +109,7 @@ class UserController
 
         $payload = array(
             "user" => [
-                "id" => $user->getUserName(),
-                "steamid" => $user->getUserSteamID()
+                "user_id" => $user->getUserId()
             ]
         );
 
@@ -160,7 +163,25 @@ class UserController
         // TODO Remove this when password is handled
         if ($password !== "1234") throw new UserNotFoundException("Invalid credentials or user does not exist");
 
-        return new User($data[0]["user_name"], $data[0]["user_steamid"], $data[0]["user_base64_image"]);
+        return new User($data);
 
     }
+
+    /**
+     * @param int $user_id
+     * @return User
+     * @throws UserNotFoundException
+     */
+    private function getUserByID(int $user_id) : User {
+
+        $data = $this->container->get("db")->select("user", "*", [
+            "user_id" => $user_id
+        ]);
+
+        if (sizeof($data) < 1) throw new UserNotFoundException("user not found");
+
+        return new User($data);
+
+    }
+
 }
