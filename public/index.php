@@ -2,6 +2,9 @@
 
 error_reporting(0);
 
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: POST, GET, OPTIONS');
+
 use VIPSystem\App;
 
 require '../vendor/autoload.php';

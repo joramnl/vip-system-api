@@ -12,7 +12,7 @@ use Monolog\Logger;
 use Tuupola\Middleware\JwtAuthentication;
 use VIPSystem\Controllers\PackageController;
 use VIPSystem\Controllers\UserController;
-use VIPSystem\Middleware\CRSMiddleware;
+use VIPSystem\Middleware\CorsPolicyMiddleWare;
 use wpscholar\phpdotenv\Loader;
 
 class App {
@@ -93,7 +93,7 @@ class App {
             return new UserController($database);
         };
 
-        $this->app->add(new CRSMiddleware);
+        $this->app->add(new CorsPolicyMiddleWare);
 
         $this->app->add(new JwtAuthentication([
             "secret" => getenv("JWT_SECRET"),
@@ -112,7 +112,7 @@ class App {
         $this->app->group('/users', function (\Slim\App $app) {
             $app->get('', UserController::class . ':list');
             $app->get('/{id:[0-9]+}', UserController::class . ':get');
-            $app->get('/authenticate', UserController::class . ':authenticate');
+            $app->post('/authenticate', UserController::class . ':authenticate');
             $app->get('/verify', UserController::class . ':verify');
         });
 
